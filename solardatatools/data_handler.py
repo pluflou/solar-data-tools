@@ -55,7 +55,10 @@ class DataHandler:
         aggregate=None,
         how=lambda x: x.mean(),
         gmt_offset=None,
+        l2norm=True
     ):
+        self.l2norm = l2norm  ################################## passed to TimeShift()
+        self.cc_c2 = 0 ##### passed to CapacityChange
         if data_frame is not None:
             if convert_to_ts:
                 data_frame, keys = make_time_series(data_frame)
@@ -893,13 +896,14 @@ time zone errors     {report['time zone correction'] != 0}
                 filter=self.daily_flags.no_errors,
                 quantile=1.00,
                 c1=15,
-                c2=100,
+                c2=self.cc_c2, #100,
                 c3=300,
                 reweight_eps=0.5,
                 reweight_niter=5,
                 dbscan_eps=0.02,
                 dbscan_min_samples="auto",
                 solver=solver,
+                l2norm=self.l2norm
             )
         # np.max(db.labels_) > 0:
         if len(set(self.capacity_analysis.labels)) > 1:
@@ -950,9 +954,9 @@ time zone errors     {report['time zone correction'] != 0}
         estimator="com",
         threshold=0.1,
         periodic_detector=False,
-        solver=None,
+        solver=None
     ):
-        self.time_shift_analysis = TimeShift()
+        self.time_shift_analysis = TimeShift(l2norm=self.l2norm)
         if self.data_clearness_score >= 0.3:
             use_ixs = self.daily_flags.clear
         else:
@@ -965,7 +969,7 @@ time zone errors     {report['time zone correction'] != 0}
             solar_noon_estimator=estimator,
             threshold=threshold,
             periodic_detector=periodic_detector,
-            solver=solver,
+            solver=solver
         )
         self.filled_data_matrix = self.time_shift_analysis.corrected_data
         if len(self.time_shift_analysis.index_set) == 0:

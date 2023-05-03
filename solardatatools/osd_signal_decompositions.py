@@ -45,10 +45,9 @@ def l2_l1d1_l2d2p365(
         return_all=False,
         yearly_periodic=False,
         solver='MOSEK',
-        #tv_weights=None,
-        transition_locs=None,
         use_ixs=None,
-        sum_card=False
+        sum_card=False,
+        verbose=False
 ):
 
     c1 = SumSquare(weight=w0)
@@ -68,7 +67,7 @@ def l2_l1d1_l2d2p365(
     classes = [c1, c2, c3]
 
     problem = Problem(signal, classes, use_set=use_ixs)
-    problem.decompose(solver=solver)
+    problem.decompose(solver=solver, verbose=verbose)
 
     s_error =  problem.decomposition[0]
     s_seas = problem.decomposition[1]
@@ -179,8 +178,9 @@ def tl1_l1d1_l2d2p365( # called once, TODO: update defaults here?
 
 
 def make_l2_l1d2_constrained(signal,
-                 weight=1e1, # val ok
-                 solver="MOSEK"
+                            weight=1e1, # val ok
+                            solver="MOSEK",
+                          #  sum_card=False
 ):
     """
     Used in solardatatools/algorithms/clipping.py
@@ -192,6 +192,13 @@ def make_l2_l1d2_constrained(signal,
         FirstValEqual(0),
         LastValEqual(1)
     ])
+
+    # if sum_card:
+    #     c2 = Aggregate([
+    #         SumCard(weight=weight, diff=2), # seems to be working in aggregate class?
+    #         FirstValEqual(0),
+    #         LastValEqual(1)
+    #     ])
 
     classes = [c1, c2]
 

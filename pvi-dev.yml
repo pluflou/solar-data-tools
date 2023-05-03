@@ -1,0 +1,32 @@
+name: pvi-dev
+channels:
+  - defaults
+  - anaconda
+  - mosek
+dependencies:
+  - python>=3.10
+  - jupyterlab
+  - ipympl
+  - ipython
+  - matplotlib
+  - scipy
+  - pvlib
+  - seaborn
+  - pandas
+  - pip
+  - nose
+  - pytest
+  - numpy
+  - requests
+  - scikit-learn
+  - s3fs
+  - boto3
+  - cassandra-driver
+  - openblas
+  - smart_open
+  - mosek
+  - haversine
+  - pykml
+  - cmake
+  - pip:
+    - cvxpy

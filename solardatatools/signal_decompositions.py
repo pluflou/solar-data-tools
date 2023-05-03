@@ -286,22 +286,22 @@ def tl1_l1d1_l2d2p365( # called once, TODO: update defaults here?
                 + (tau - 0.5) * s_error
             )
             + c1 * cvx.norm1(cvx.multiply(tv_weights, cvx.diff(s_hat, k=1)))
-           #+ c2 * cvx.norm(cvx.diff(s_seas, k=2))
+           # + c2 * cvx.norm(cvx.diff(s_seas, k=2))
             + c2 * cvx.sum_squares(cvx.diff(s_seas, k=2))
             + c3 * beta**2 # linear term that has a slope of beta over 1 year, done wrong
         )
-    # else:
-    #     objective = cvx.Minimize(
-    #         # (365 * 3 / len(signal)) * w * cvx.sum(0.5 * cvx.abs(s_error) + (tau - 0.5) * s_error)
-    #         2
-    #         * cvx.sum(
-    #             0.5 * cvx.abs(s_error)
-    #             + (tau - 0.5) * s_error
-    #         )
-    #         + c1 * cvx.norm1(cvx.multiply(tv_weights, cvx.diff(s_hat, k=1)))
-    #        # + c2 * cvx.sum_squares(cvx.diff(s_seas, k=2))
-    #         + c2 * cvx.norm(cvx.diff(s_seas, k=2))
-    #     )
+    else:
+        objective = cvx.Minimize(
+            # (365 * 3 / len(signal)) * w * cvx.sum(0.5 * cvx.abs(s_error) + (tau - 0.5) * s_error)
+            2
+            * cvx.sum(
+                0.5 * cvx.abs(s_error)
+                + (tau - 0.5) * s_error
+            )
+            + c1 * cvx.norm1(cvx.multiply(tv_weights, cvx.diff(s_hat, k=1)))
+            + c2 * cvx.sum_squares(cvx.diff(s_seas, k=2))
+           # + c2 * cvx.norm(cvx.diff(s_seas, k=2))
+        )
     constraints = [
         signal[use_ixs] == s_hat[use_ixs] + s_seas[:n][use_ixs] + s_error[use_ixs],
         cvx.sum(s_seas[:365]) == 0,
@@ -326,7 +326,7 @@ def tl1_l1d1_l2d2p365( # called once, TODO: update defaults here?
     return s_hat.value, s_seas.value[:n]
 
 
-def make_l2_l1d2_constrained(y,
+def make_l2_l1d2_constrained(signal,
                  weight=1e1, # val ok
                  solver="MOSEK",
                  return_obj=False,
@@ -337,11 +337,16 @@ def make_l2_l1d2_constrained(y,
     Used in solardatatools/algorithms/clipping.py
     Added hard-coded constraints on the first and last vals
     """
-    y_hat = cvx.Variable(len(y))
-    y_param = cvx.Parameter(len(y), value=y)
+    if use_ixs is None:
+        use_ixs = ~np.isnan(signal)
+    else:
+        use_ixs = np.logical_and(use_ixs, ~np.isnan(signal))
+
+    y_hat = cvx.Variable(len(signal))
+    y_param = signal
     mu = cvx.Parameter(nonneg=True)
     mu.value = weight
-    error = cvx.sum_squares(y_param - y_hat)
+    error = cvx.sum_squares(y_param[use_ixs] - y_hat[use_ixs])
     reg = cvx.norm(cvx.diff(y_hat, k=2), p=1)
 
     objective = cvx.Minimize(error + mu * reg)

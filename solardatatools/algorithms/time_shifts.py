@@ -19,11 +19,12 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
-from solardatatools.signal_decompositions import l2_l1d1_l2d2p365
+from solardatatools.signal_decompositions import l2_l1d1_l2d2p365 as cvx_sd_ss
+from solardatatools.signal_decompositions_l2norm import l2_l1d1_l2d2p365 as cvx_sd_l2norm
 
 
 class TimeShift:
-    def __init__(self):
+    def __init__(self, l2norm):
         self.metric = None
         self.s1 = None
         self.s2 = None
@@ -39,6 +40,11 @@ class TimeShift:
         self.baseline = None
         self.periodic_detector = None
         self.__recursion_depth = 0
+        self.l2norm = l2norm ############ True is original
+        if self.l2norm: ############################
+            self.l2_l1d1_l2d2p365 = cvx_sd_l2norm
+        else:
+            self.l2_l1d1_l2d2p365 = cvx_sd_ss
 
     def run(
         self,
@@ -49,7 +55,7 @@ class TimeShift:
         solar_noon_estimator="com",
         threshold=0.1,
         periodic_detector=False,
-        solver=None,
+        solver=None
     ):
         if solar_noon_estimator == "com":
             metric = energy_com(data)
@@ -151,7 +157,7 @@ class TimeShift:
         # set up train/test split with sklearn
         ixs = np.arange(len(metric))
         ixs = ixs[use_ixs]
-        train_ixs, test_ixs = train_test_split(ixs, test_size=0.85)
+        train_ixs, test_ixs = train_test_split(ixs, test_size=0.85)#, random_state=35)
         train = np.zeros(len(metric), dtype=bool)
         test = np.zeros(len(metric), dtype=bool)
         train[train_ixs] = True
@@ -203,13 +209,14 @@ class TimeShift:
         periodic_detector,
         transition_locs=None,
         n_iter=5,
-        solver=None,
+        solver=None
     ):
         # Iterative reweighted L1 heuristic
         w = np.ones(len(metric) - 1)
         eps = 0.1
+
         for i in range(n_iter):
-            s1, s2 = l2_l1d1_l2d2p365(
+            s1, s2 = self.l2_l1d1_l2d2p365(
                 metric,
                 c1=c1,
                 c2=c2,

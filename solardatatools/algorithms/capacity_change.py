@@ -16,6 +16,7 @@ power production data sets. The algorithm works as follows:
 
 import numpy as np
 from solardatatools.signal_decompositions import tl1_l1d1_l2d2p365
+from solardatatools.signal_decompositions_l2norm import tl1_l1d1_l2d2p365 as cvx_sd_l2norm
 from sklearn.cluster import DBSCAN
 
 
@@ -40,6 +41,7 @@ class CapacityChange:
         dbscan_eps=0.02,
         dbscan_min_samples="auto",
         solver=None,
+        l2norm=False
     ):
         if filter is None:
             filter = np.ones(data.shape[1], dtype=bool)
@@ -47,10 +49,16 @@ class CapacityChange:
             metric = np.nanquantile(data, q=quantile, axis=0)
             # metric = np.sum(data, axis=0)
             metric /= np.max(metric)
+
             w = np.ones(len(metric) - 1)
             eps = reweight_eps
+            if l2norm:
+                func = cvx_sd_l2norm
+            else:
+                func = tl1_l1d1_l2d2p365
+
             for i in range(reweight_niter):
-                s1, s2 = tl1_l1d1_l2d2p365(
+                s1, s2 = func(
                     metric,
                     use_ixs=filter,
                     tau=tau,
