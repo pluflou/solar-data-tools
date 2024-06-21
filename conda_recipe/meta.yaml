@@ -21,7 +21,7 @@ requirements:
     - pip
     - python
     - scipy
-    - numpy
+    - numpy <2.0
     - pandas
     - scikit-learn
     - jupyter

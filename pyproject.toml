@@ -18,7 +18,7 @@ requires-python = ">=3.6"
 
 dependencies = [
     "scipy",
-    "numpy",
+    "numpy<2.0",
     "pandas",
     "scikit-learn",
     "jupyter",

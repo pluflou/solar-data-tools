@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - "main"
+  push:
+    branches:
 env:
   # todo(nimish): extend to matrix of python versions/OS
   AWS_REGION: "us-west-1"

@@ -1,5 +1,5 @@
 scipy
-numpy
+numpy<2.0
 pandas
 scikit-learn
 jupyter
@@ -14,6 +14,7 @@ smart_open
 sig-decomp
 clarabel
 qss
+osqp
 tqdm
 spcqe
 
