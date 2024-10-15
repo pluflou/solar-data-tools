@@ -40,17 +40,34 @@ Finally, call `get_result()` to run and save the dask report and summary report.
 The following is an example using a local client and local CSVs:
 ```python
 from sdt_dask.dask_tool.runner import Runner
-from sdt_dask.dataplugs.csv_plug import LocalFiles
-from sdt_dask.clients.local_client import LocalClient
+from sdt_dask.clients.aws.fargate_client import FargateClient
+from sdt_dask.dataplugs.S3Bucket_plug import S3Bucket
 
-client_setup = LocalClient(workers=4, threads=3, memory=5)
+# Define variables
+...
+
+# Define S3 bucket dataplug
+dataplug = S3Bucket(bucket_name=BUCKET)
+keys = FILENAMES_LIST
+
+# Dask Fargate client setup
+client_setup = FargateClient(
+                image=IMAGE,
+                tags=TAGS,
+                vpc=VPC,
+                region_name=AWS_DEFAULT_REGION,
+                environment=ENVIRONMENT,
+                workers=WORKERS,
+                threads=THREADS_PER_WORKER
+)
+# Initialize client
 client = client_setup.init_client()
 
-dataplug = LocalFiles(path_to_files=path_to_files)
-keys = some_list_of_file_names
-
-runner = Runner(client, output_path=paht_to_output_dir)
+# Initialize and set up Dask runner
+runner = Runner(client, output_path=path_to_output_dir)
 runner.set_up(keys, dataplug, fix_shifts=True, verbose=True)
+
+# Compute results on list of keys
 runner.get_result()
 ```
 
